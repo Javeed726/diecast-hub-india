@@ -2,77 +2,77 @@ import { useState, useEffect } from "react";
 import { subscribeToWebsites } from "../firebase/websites";
 import type { DiecastWebsite } from "../types";
 
-const CACHE_KEY = 'die-list-websites-cache';
+const CACHE_KEY = "die-list-websites-cache";
 
-// 📦 Demo seed data — refreshed to match new categories and tags
+// 📦 Demo seed data — Refreshed with specific requested sites
 const DEMO_DATA: DiecastWebsite[] = [
   {
     id: "demo-1",
-    name: "HobbyWala India",
-    url: "https://hobbywala.in",
-    logo: "https://ui-avatars.com/api/?name=HW&background=f97316&color=fff&bold=true&size=128",
+    name: "Karz and Dolls",
+    url: "https://www.karzanddolls.com/",
+    logo: "https://ui-avatars.com/api/?name=KD&background=f97316&color=fff&bold=true&size=128",
     category: "Multi-Brand",
-    tags: ["Mrp", "premium", "preorder"],
+    tags: ["preorder", "premium", "Mrp"],
     description:
-      "One of India's largest diecast retailers with a huge range of brands, from Hotwheels to premium scale models.",
-    createdAt: Date.now() - 5000,
+      "One of India's most popular destinations for 1:64 scale models, featuring Mini-GT, Pop Race, and many premium brands.",
+    createdAt: Date.now() - 1000,
     featured: true,
   },
   {
     id: "demo-2",
-    name: "Diecast Model Store",
-    url: "https://diecastmodelstore.in",
-    logo: "https://ui-avatars.com/api/?name=DM&background=8b5cf6&color=fff&bold=true&size=128",
-    category: "Premium Diecast",
-    tags: ["premium", "imported", "rarefinds"],
+    name: "Krazy Caterpillar",
+    url: "https://krazycaterpillar.com/",
+    logo: "https://ui-avatars.com/api/?name=KC&background=8b5cf6&color=fff&bold=true&size=128",
+    category: "Multi-Brand",
+    tags: ["Mrp", "premium"],
     description:
-      "Specializing in 1:18 and 1:43 premium scale models from brands like AUTOart, Minichamps, and Spark.",
-    createdAt: Date.now() - 10000,
+      "Extensive collection of diecast models ranging from budget-friendly options to high-end collector items.",
+    createdAt: Date.now() - 2000,
     featured: true,
   },
   {
     id: "demo-3",
-    name: "Mini-GT Specialist",
-    url: "https://minigtindia.com",
-    logo: "https://ui-avatars.com/api/?name=MGT&background=3b82f6&color=fff&bold=true&size=128",
-    category: "Mini-GT",
-    tags: ["preorder", "imported", "premium"],
+    name: "ToyMarche",
+    url: "https://www.toymarche.com/",
+    logo: "https://ui-avatars.com/api/?name=TM&background=3b82f6&color=fff&bold=true&size=128",
+    category: "Multi-Brand",
+    tags: ["Mrp", "budget"],
     description:
-      "Your dedicated source for Mini-GT 1:64 scale models, featuring the latest drops and hard-to-find chase pieces.",
-    createdAt: Date.now() - 15000,
+      "A wide variety of toys and diecast models. Great for finding mainline releases and building a collection.",
+    createdAt: Date.now() - 3000,
   },
   {
     id: "demo-4",
-    name: "Elite Diecast",
-    url: "https://elitediecast.in",
-    logo: "https://ui-avatars.com/api/?name=ED&background=8b5cf6&color=fff&bold=true&size=128",
-    category: "Premium Diecast",
-    tags: ["rarefinds", "premium", "imported"],
+    name: "ToyCra",
+    url: "https://toycra.com/",
+    logo: "https://ui-avatars.com/api/?name=TC&background=10b981&color=fff&bold=true&size=128",
+    category: "Multi-Brand",
+    tags: ["Mrp", "premium"],
     description:
-      "Curated rare and discontinued diecast models. Great for serious collectors looking for grails.",
-    createdAt: Date.now() - 20000,
+      "A premium toy store with a dedicated diecast section featuring several international brands.",
+    createdAt: Date.now() - 4000,
   },
   {
     id: "demo-5",
-    name: "Collectors Hub",
-    url: "https://collectorshub.in",
-    logo: "https://ui-avatars.com/api/?name=CH&background=10b981&color=fff&bold=true&size=128",
-    category: "Multi-Brand",
-    tags: ["RC cars", "imported", "premium"],
+    name: "ScaleArts India",
+    url: "https://scalearts.in/",
+    logo: "https://ui-avatars.com/api/?name=SA&background=ef4444&color=fff&bold=true&size=128",
+    category: "Premium Diecast",
+    tags: ["premium", "imported", "rarefinds"],
     description:
-      "A variety of models including RC cars, high-end diecast, and limited edition releases.",
-    createdAt: Date.now() - 25000,
+      "Specialized in high-end scale models like 1:18 and 1:43 from brands like AUTOart, Kyosho, and Minichamps.",
+    createdAt: Date.now() - 5000,
   },
   {
     id: "demo-6",
-    name: "Hotwheels India",
-    url: "https://hotwheelsindia.in",
-    logo: "https://ui-avatars.com/api/?name=HI&background=f59e0b&color=fff&bold=true&size=128",
-    category: "Hotwheels",
-    tags: ["Mrp", "non mrp", "non licensed cars"],
+    name: "Not A Toy",
+    url: "https://www.notatoy.in/",
+    logo: "https://ui-avatars.com/api/?name=NT&background=1e293b&color=fff&bold=true&size=128",
+    category: "Premium Diecast",
+    tags: ["rarefinds", "premium", "Mrp"],
     description:
-      "Affordable Hotwheels listings, including mainline and premium sets at transparent pricing.",
-    createdAt: Date.now() - 30000,
+      "A niche collector store focused on rare and high-detail diecast models for serious enthusiasts.",
+    createdAt: Date.now() - 6000,
   },
 ];
 
@@ -93,9 +93,9 @@ export function useWebsites(): UseWebsitesResult {
     }
     return DEMO_DATA; // Fallback to demo data immediately on absolute first visit
   });
-  
+
   // We are "loading" the live data in the background, but we show what we have (cache or demo)
-  const [loading, setLoading] = useState(false); 
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isDemo, setIsDemo] = useState(() => !localStorage.getItem(CACHE_KEY));
 
