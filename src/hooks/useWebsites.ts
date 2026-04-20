@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { subscribeToWebsites } from "../firebase/websites";
 import type { DiecastWebsite } from "../types";
 
+const CACHE_KEY = 'die-list-websites-cache';
+
 // 📦 Demo seed data — refreshed to match new categories and tags
 const DEMO_DATA: DiecastWebsite[] = [
   {
@@ -82,8 +84,17 @@ interface UseWebsitesResult {
 }
 
 export function useWebsites(): UseWebsitesResult {
-  const [websites, setWebsites] = useState<DiecastWebsite[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [websites, setWebsites] = useState<DiecastWebsite[]>(() => {
+    try {
+      const cached = localStorage.getItem(CACHE_KEY);
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
+  
+  // Only show loading if we have NO data (either cached or initial)
+  const [loading, setLoading] = useState(websites.length === 0);
   const [error, setError] = useState<string | null>(null);
   const [isDemo, setIsDemo] = useState(false);
 
@@ -93,28 +104,38 @@ export function useWebsites(): UseWebsitesResult {
     try {
       unsubscribe = subscribeToWebsites(
         (sites) => {
-          if (sites.length === 0 && loading) {
+          if (sites.length === 0 && (loading || websites.length === 0)) {
             setWebsites(DEMO_DATA);
             setIsDemo(true);
           } else {
             setWebsites(sites);
             setIsDemo(false);
+            // Cache the live results
+            try {
+              localStorage.setItem(CACHE_KEY, JSON.stringify(sites));
+            } catch (e) {
+              console.warn("Failed to cache websites:", e);
+            }
           }
           setLoading(false);
           setError(null);
         },
         (err) => {
           console.warn("Firebase error, falling back to demo data:", err);
-          setWebsites(DEMO_DATA);
-          setIsDemo(true);
+          if (websites.length === 0) {
+            setWebsites(DEMO_DATA);
+            setIsDemo(true);
+          }
           setLoading(false);
           setError(null);
         },
       );
     } catch (err) {
-      console.warn("Firebase not configured, using demo data");
-      setWebsites(DEMO_DATA);
-      setIsDemo(true);
+      console.warn("Firebase not configured, using cached or demo data");
+      if (websites.length === 0) {
+        setWebsites(DEMO_DATA);
+        setIsDemo(true);
+      }
       setLoading(false);
     }
 
