@@ -87,55 +87,54 @@ export function useWebsites(): UseWebsitesResult {
   const [websites, setWebsites] = useState<DiecastWebsite[]>(() => {
     try {
       const cached = localStorage.getItem(CACHE_KEY);
-      return cached ? JSON.parse(cached) : [];
-    } catch {
-      return [];
+      if (cached) return JSON.parse(cached);
+    } catch (e) {
+      console.warn("Failed to parse cache:", e);
     }
+    return DEMO_DATA; // Fallback to demo data immediately on absolute first visit
   });
   
-  // Only show loading if we have NO data (either cached or initial)
-  const [loading, setLoading] = useState(websites.length === 0);
+  // We are "loading" the live data in the background, but we show what we have (cache or demo)
+  const [loading, setLoading] = useState(false); 
   const [error, setError] = useState<string | null>(null);
-  const [isDemo, setIsDemo] = useState(false);
+  const [isDemo, setIsDemo] = useState(() => !localStorage.getItem(CACHE_KEY));
 
   useEffect(() => {
     let unsubscribe: (() => void) | undefined;
+    setLoading(true); // Signal that we are fetching fresh data
 
     try {
       unsubscribe = subscribeToWebsites(
         (sites) => {
-          if (sites.length === 0 && (loading || websites.length === 0)) {
-            setWebsites(DEMO_DATA);
-            setIsDemo(true);
-          } else {
+          if (sites.length > 0) {
             setWebsites(sites);
             setIsDemo(false);
-            // Cache the live results
             try {
               localStorage.setItem(CACHE_KEY, JSON.stringify(sites));
             } catch (e) {
               console.warn("Failed to cache websites:", e);
             }
-          }
-          setLoading(false);
-          setError(null);
-        },
-        (err) => {
-          console.warn("Firebase error, falling back to demo data:", err);
-          if (websites.length === 0) {
+          } else if (websites.length === 0) {
+            // Only use demo data if we have absolutely nothing else and live returned empty
             setWebsites(DEMO_DATA);
             setIsDemo(true);
           }
           setLoading(false);
           setError(null);
         },
+        (err) => {
+          console.warn("Firebase error, staying with current data:", err);
+          setLoading(false);
+          setError(null);
+          // If we had nothing, at least show demo
+          if (websites.length === 0) {
+            setWebsites(DEMO_DATA);
+            setIsDemo(true);
+          }
+        },
       );
     } catch (err) {
-      console.warn("Firebase not configured, using cached or demo data");
-      if (websites.length === 0) {
-        setWebsites(DEMO_DATA);
-        setIsDemo(true);
-      }
+      console.warn("Firebase not configured");
       setLoading(false);
     }
 

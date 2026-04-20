@@ -110,8 +110,8 @@ export function HomePage() {
         />
       </section>
 
-      {loading ? (
-        /* Skeleton grid */
+      {loading && websites.length === 0 ? (
+        /* Skeleton grid - Only show on very first load before we have any data */
         <section className="animate-fade-in">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {Array.from({ length: 6 }).map((_, i) => (
